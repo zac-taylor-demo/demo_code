@@ -24,7 +24,7 @@
  * Author: busdev
  *
  * Created on 30 December 2022
- * Updated on 7 January 2023
+ * Updated on 12 January 2023
  */
 
 #ifndef __CREDENTIALS_WEBSERVER_H__
@@ -70,6 +70,8 @@
 #define RESET_DISPLAY_TITLE "<H3>Reset Display</H3>"
 #define PAGE_NOT_FOUND      "<H1>Page Not Found</H1>"
 
+// SSID rules:
+//
 // 1. First character must not be in ['!', '#', ';'].
 // 2. Following characters NOT allowed ['+', ']', '/', '"', TAB].
 // 3. Trailing spaces NOT allowed.

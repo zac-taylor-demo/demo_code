@@ -19,7 +19,7 @@
  * Author: Z Taylor
  *
  * Created on 30 December 2022
- * Updated on 11 January 2023
+ * Updated on 12 January 2023
  * 
  * Description
  * -----------
@@ -66,7 +66,6 @@
 #include "dhcpserver.h"
 #include "credentials_webserver.h"
 
-//extern cyw43_t cyw43_state;
 cyw43_t cyw43_state;
 
 /*!
