@@ -410,10 +410,6 @@ err_t Credentials_Webserver::send_data(struct tcp_pcb *pcb, const char *data_ptr
  if (tcp_sndbuf(pcb) < data_len) 
  {
   log->print_message("Cannot send data, TCP send buffer too small\r\n");
-
-//  printf("Cannot send data, tcp_sndbuf = %d bytes, data length = %d bytes\r\n",
-//         tcp_sndbuf(pcb), data_len);   // *** Debug ***  ??
-
   err = ERR_MEM;
  }
 
@@ -424,8 +420,6 @@ err_t Credentials_Webserver::send_data(struct tcp_pcb *pcb, const char *data_ptr
   if (err != ERR_OK) 
   {
    log->print_message("Error writing test HTTP header\r\n");
-
-//   printf("error (%d) writing test http header\r\n", err);  // *** Debug ***
   }
  }
 
@@ -601,7 +595,7 @@ err_t Credentials_Webserver::handle_reset_confirmed_page(struct tcp_pcb *pcb)
   return ERR_ARG;
 
 // *** Outstanding Work ***
-// result = master_reset(); // Main display reset function, located in FileManager.
+// result = master_reset(); // Main display reset function.
  result = true;  // *** Test ***
 
  if (result == true)
@@ -694,9 +688,6 @@ err_t Credentials_Webserver::handle_image_server_credentials_page(struct tcp_pcb
 
  log_text = "\n SSID:       " + new_ssid + "\n Password:   " + new_pass + "s\n Server URL: " + new_server + "\n";
  log->print_message(log_text);
-
-// printf(" SSID:       %s\n Password:   %s\n Server URL: %s\n",
-//        new_ssid.c_str(), new_pass.c_str(), new_server.c_str());  // *** Debug ***  ??
 
  is_ssid_present_and_correct = check_wifi_ssid_format();
 
@@ -1191,7 +1182,6 @@ void Credentials_Webserver::start_webserver()
  if (err != ERR_OK) 
  {
   log->print_message("Unable to bind to port 80\r\n");
-// printf("Unable to bind to port 80: err = %d\r\n", err);
   return;
  }
 

@@ -36,6 +36,14 @@
 Log::Log(bool is_verbose):
  is_verbose(is_verbose) {}
 
+/*!
+* \brief Prints error message.
+*
+* Looks up text of error message using the error_number.
+*
+* \param error_number
+*/
+
 void Log::print_error(int error_number)
 {
  if (is_verbose == true)
@@ -51,6 +59,14 @@ void Log::print_error(int error_number)
  }
 }
 
+/*!
+* \brief Prints log message.
+*
+* Looks up text of log message using the log_number.
+*
+* \param log_number
+*/
+
 void Log::print_log(int log_number)
 {
  if (is_verbose == true)
@@ -64,6 +80,14 @@ void Log::print_log(int log_number)
   }
  }
 }
+
+/*!
+* \brief Prints message.
+*
+* Checks the is_verbose boolean and if true, prints msg to stdout.
+*
+* \param msg
+*/
 
 void Log::print_message(string msg)
 {

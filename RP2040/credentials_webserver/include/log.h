@@ -23,7 +23,7 @@
  * File:   log.h
  * Author: busdev
  *
- * Created on 14 January 2023
+ * Created on 14 February 2023
  * Updated on 14 February 2023
  */
 
@@ -34,9 +34,16 @@
 
 #define NO_ERROR 0
 
+// Error Messages.
+
 #define UNDEFINED_ERROR_MSG "Undefined error."
 
 // Log Codes.
+
+#define CONFIG_JUMPER_DETECTED         1
+#define FLASH_STORAGE_AREA_INITIALISED 2
+#define WIFI_CREDENTIALS_SET           3
+#define WIFI_CREDENTIALS_UPDATED       4
 
 #define UNDEFINED_LOG_MSG "Undefined message code."
 
