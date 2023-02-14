@@ -45,14 +45,17 @@
  * Author: busdev
  *
  * Created on 30 December 2022
- * Updated on 10 January 2023
+ * Updated on 31 January 2023
  */
 
 #include "credentials_webserver.h"
 
 Credentials_Webserver *cws;
 
-Credentials_Webserver::Credentials_Webserver():
+Credentials_Webserver::Credentials_Webserver(Storage_Handler *sh, Log *log):
+ sh(sh),
+ log(log),
+ log_text(""),
  new_ssid(""),
  new_pass(""),
  new_server(""),
@@ -70,6 +73,24 @@ Credentials_Webserver::Credentials_Webserver():
   web_page_header = web_page_header + PAGE_TITLE + "<style type=\"text/css\"></style></head>";
   web_page_footer = FOOTER1;
   web_page_footer = web_page_footer + "</body></html>";
+
+// Retrieve existing credentials.
+
+  ssid = sh->get_wifi_ssid();
+  pass = sh->get_wifi_password();
+  server = sh->get_image_server_url();
+
+// Set new version of credentials to existing credentials.
+
+  new_ssid = ssid;
+  new_pass = pass;
+  new_server = server;
+
+// Check credentials for correctness.
+
+  is_ssid_present_and_correct = check_wifi_ssid_format();
+  is_password_present_and_correct = check_wifi_password_format();
+  is_server_url_present_and_correct = check_image_server_url_format();
  }
 
 Credentials_Webserver::~Credentials_Webserver()
@@ -293,6 +314,29 @@ bool Credentials_Webserver::check_image_server_url_format(void)
 }
 
 /*!
+* \brief Checks the image server's credentials are present, and are not zero length.
+*
+* \return Boolean.
+*/
+
+bool Credentials_Webserver::check_fields(void)
+{
+ bool fields_valid = false;
+
+  if ((is_ssid_present_and_correct == true)       &&
+      (is_password_present_and_correct == true)   &&
+      (is_server_url_present_and_correct == true) &&
+      (new_ssid.length() > 0) &&
+      (new_pass.length() > 0) &&
+      (new_server.length() > 0))
+ {
+  fields_valid = true;
+ }
+
+ return fields_valid;
+}
+
+/*!
 * \brief Sends an HTML page to the client.
 *
 * The page consists of a header and contents.
@@ -308,7 +352,7 @@ err_t Credentials_Webserver::send_page(struct tcp_pcb *pcb, const char *data_ptr
  err_t err = ERR_OK;
  int hlen;
  char http_header_buf[HTTP_HEADER_BUFFER_SIZE];
-char lbuf[40];
+ char lbuf[40];
 
 // Check the parameters.
 
@@ -365,8 +409,11 @@ err_t Credentials_Webserver::send_data(struct tcp_pcb *pcb, const char *data_ptr
 
  if (tcp_sndbuf(pcb) < data_len) 
  {
-  printf("Cannot send data, tcp_sndbuf = %d bytes, data length = %d bytes\r\n",
-         tcp_sndbuf(pcb), data_len);   // *** Debug ***
+  log->print_message("Cannot send data, TCP send buffer too small\r\n");
+
+//  printf("Cannot send data, tcp_sndbuf = %d bytes, data length = %d bytes\r\n",
+//         tcp_sndbuf(pcb), data_len);   // *** Debug ***  ??
+
   err = ERR_MEM;
  }
 
@@ -376,7 +423,9 @@ err_t Credentials_Webserver::send_data(struct tcp_pcb *pcb, const char *data_ptr
 
   if (err != ERR_OK) 
   {
-   printf("error (%d) writing test http header\r\n", err);  // *** Debug ***
+   log->print_message("Error writing test HTTP header\r\n");
+
+//   printf("error (%d) writing test http header\r\n", err);  // *** Debug ***
   }
  }
 
@@ -424,8 +473,7 @@ err_t Credentials_Webserver::handle_home_page(struct tcp_pcb *pcb)
 
 // Test wifi credentials. If O.K, show display button.
 
- if ((is_ssid_present_and_correct == true) && (is_password_present_and_correct == true) && 
-     (is_server_url_present_and_correct == true))
+ if (check_fields() == true)
  {
   web_page_str = web_page_str  + "&nbsp;&nbsp;" + BUTTON1 + "formaction=\"/setup/display\" value=\"Display\">";
  }
@@ -593,9 +641,6 @@ err_t Credentials_Webserver::handle_reset_confirmed_page(struct tcp_pcb *pcb)
  return err;
 }
 
-// *** Outstanding Work ***
-// Write parameters to file system.
-
 /*!
 * \brief Processes user entered credentials.
 *
@@ -618,6 +663,7 @@ err_t Credentials_Webserver::handle_image_server_credentials_page(struct tcp_pcb
  char *data;
  int len;
 
+ bool is_data_changed = false;
  bool is_ssid_error = false;
  bool is_password_error = false;
  bool is_server_error = false;
@@ -646,15 +692,22 @@ err_t Credentials_Webserver::handle_image_server_credentials_page(struct tcp_pcb
 
  memset(req, 0, rlen);  // Clear request buffer.
 
- printf(" SSID:       %s\n Password:   %s\n Server URL: %s\n",
-        new_ssid.c_str(), new_pass.c_str(), new_server.c_str());  // *** Debug ***
+ log_text = "\n SSID:       " + new_ssid + "\n Password:   " + new_pass + "s\n Server URL: " + new_server + "\n";
+ log->print_message(log_text);
+
+// printf(" SSID:       %s\n Password:   %s\n Server URL: %s\n",
+//        new_ssid.c_str(), new_pass.c_str(), new_server.c_str());  // *** Debug ***  ??
 
  is_ssid_present_and_correct = check_wifi_ssid_format();
 
  if ((is_ssid_present_and_correct == true) || (new_ssid.length() == 0))
  {
-  ssid = new_ssid;
-//  write_string_to_file(WIRELESS_SSID,ssid);
+  if (new_ssid != ssid)
+  {
+   sh->set_wifi_ssid(new_ssid);
+   ssid = new_ssid;
+   is_data_changed = true;
+  }
  }
  else
  {
@@ -665,8 +718,12 @@ err_t Credentials_Webserver::handle_image_server_credentials_page(struct tcp_pcb
 
  if ((is_password_present_and_correct == true) || (new_pass.length() == 0))
  {
-  pass = new_pass;
-//  write_string_to_file(WIRELESS_PASSWORD,pass);
+  if (pass != new_pass)
+  {
+   sh->set_wifi_password(new_pass);
+   pass = new_pass;
+   is_data_changed = true;
+  }
  }
  else
  {
@@ -677,15 +734,49 @@ err_t Credentials_Webserver::handle_image_server_credentials_page(struct tcp_pcb
  
  if ((is_server_url_present_and_correct == true) || (new_server.length() == 0))
  {
-  server = new_server;
-//  write_string_to_file(OFFICE_SERVER_URL,server);
+  if (server != new_server)
+  {
+   sh->set_image_server_url(new_server);
+   server = new_server;
+   is_data_changed = true;
+  }
  }
  else
  {
   is_server_error = true;
  }
 
- if (is_ssid_error == true)
+ // Set EPD Status.
+
+ if (check_fields() == true)
+ {
+  if (sh->get_epd_status() != EPD_STORE_CREDENTIALS_SET)
+  {
+   sh->set_epd_status(EPD_STORE_CREDENTIALS_SET);
+   is_data_changed = true;
+  }
+ }
+ else
+ {
+  if (sh->get_epd_status() != EPD_STORE_SETTING_CREDENTIALS)
+  {
+   sh->set_epd_status(EPD_STORE_SETTING_CREDENTIALS);
+   is_data_changed = true;
+  }
+ }
+
+ // User entered data has changed - write it to flash.
+
+ if ((is_data_changed == true) && 
+     (is_ssid_error == false) && 
+     (is_password_error == false) && 
+     (is_server_error == false))
+ {
+  log->print_message("Writing credentials to data store.\n");  // *** Debug ***
+
+  sh->write_data_to_store();
+ }
+ else if (is_ssid_error == true)
  {
   return handle_error_message_page(pcb, SSID_ERROR, "/setup/imageserver");
  }
@@ -1091,7 +1182,7 @@ void Credentials_Webserver::start_webserver()
 
  if (!pcb) 
  {
-  printf("Error creating PCB. Out of Memory\r\n");
+  log->print_message("Error creating PCB. Out of Memory\r\n");
   return;
  }
 
@@ -1099,7 +1190,8 @@ void Credentials_Webserver::start_webserver()
 
  if (err != ERR_OK) 
  {
-  printf("Unable to bind to port 80: err = %d\r\n", err);
+  log->print_message("Unable to bind to port 80\r\n");
+// printf("Unable to bind to port 80: err = %d\r\n", err);
   return;
  }
 
@@ -1108,7 +1200,7 @@ void Credentials_Webserver::start_webserver()
 
  if (!pcb) 
  {
-  printf("Out of memory while tcp_listen\r\n");
+  log->print_message("Out of memory while tcp_listen\r\n");
   return;
  }
 

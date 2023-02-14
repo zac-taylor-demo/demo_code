@@ -24,7 +24,7 @@
  * Author: busdev
  *
  * Created on 30 December 2022
- * Updated on 12 January 2023
+ * Updated on 31 January 2023
  */
 
 #ifndef __CREDENTIALS_WEBSERVER_H__
@@ -80,6 +80,7 @@
 #define PASS_ERROR    "<b>Invalid Password</b><br><br><i>Password must be between 8 and 63<br>ASCII printable characters in length</i>"
 #define URL_ERROR     "<b>Invalid URL</b><br><br><i>URL must not have spaces and<br>be correctly formed</i>"
 #define REQUEST_ERROR "<b>Invalid Request</b>"
+#define STORAGE_ERROR "<b>Unable to store user entered data</b>"
 
 // Arguments for WiFi credentials and Image Server URL.
 
@@ -98,6 +99,8 @@ enum http_req_type { HTTP_GET, HTTP_POST, HTTP_UNKNOWN };
 using std::string;
 
 #include "lwip/tcp.h"
+#include "log.h"
+#include "storage_handler.h"
 
 extern err_t w_http_recv_callback(void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err);
 extern err_t w_http_sent_callback(void *arg, struct tcp_pcb *pcb, u16_t len);
@@ -106,7 +109,7 @@ extern err_t http_accept_callback(void *arg, struct tcp_pcb *pcb, err_t err);
 class Credentials_Webserver 
 {
  public:
-  Credentials_Webserver();
+  Credentials_Webserver(Storage_Handler *sh, Log *log);
   ~Credentials_Webserver();
 
   void set_is_configuring(bool configuring_display);
@@ -125,6 +128,7 @@ class Credentials_Webserver
   bool check_wifi_ssid_format(void);
   bool check_wifi_password_format(void);
   bool check_image_server_url_format(void);
+  bool check_fields(void);
   
   err_t send_page(struct tcp_pcb *pcb, const char *data_ptr, int data_len);
   err_t send_data(struct tcp_pcb *pcb, const char *data_ptr, int data_len);
@@ -149,6 +153,10 @@ class Credentials_Webserver
   void extract_path(char *path, const char *req, int rlen, int initial_offset);
   string extract_argument(const char* data, int len, const char* argument_name);
    
+  Storage_Handler *sh;
+  Log *log;
+
+  string log_text;
   string new_ssid;
   string new_pass;
   string new_server;

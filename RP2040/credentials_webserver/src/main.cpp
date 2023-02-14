@@ -58,12 +58,17 @@
  * 
  */
 
+#define GPIO15 15
+
 #include <string.h>
 #include <stdlib.h>
 
+#include "hardware/gpio.h"
 #include "pico/stdlib.h"
 #include "pico/cyw43_arch.h"
 #include "dhcpserver.h"
+#include "storage_handler.h"
+#include "log.h"
 #include "credentials_webserver.h"
 
 cyw43_t cyw43_state;
@@ -79,9 +84,9 @@ cyw43_t cyw43_state;
 *
 */
 
-void run_server() 
+void run_server(Storage_Handler *sh, Log *log) 
 {
- cws = new Credentials_Webserver();
+ cws = new Credentials_Webserver(sh, log);
  cws->set_is_configuring(true);
  cws->start_webserver();
 
@@ -121,34 +126,74 @@ void run_server()
 
 int main() 
 {
+ string log_text;
  ip4_addr_t gw, mask;
  dhcp_server_t dhcp_server;
+ Storage_Handler *sh;
+ Log *log;
 
  stdio_init_all();
 
- if (cyw43_arch_init()) 
- {
-  printf("Failed to initialise\n");
-  return 1;
- }
+// GPIO15 is set as an input pin that is pulled up.
+// On the hardware side, it can be jumpered to ground, causing the Pico-W to
+// act as a wireless access point.
 
- cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);  // Turn on LED.
- cyw43_arch_enable_ap_mode(APSSID, APPSK, CYW43_AUTH_WPA2_AES_PSK);
- cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
+ gpio_init(GPIO15);
+ gpio_pull_up(GPIO15);
+
+ log = new Log(true); // Verbose output.
+ sh = new Storage_Handler();
+ 
+
+// Check the EPD status byte and the level of GPIO15 (false = LOW).
+
+ if ((sh->get_epd_status() != EPD_STORE_CREDENTIALS_SET) || (gpio_get(GPIO15) == false))
+ {
+  if (cyw43_arch_init()) 
+  {
+   log->print_message("Failed to initialise WiFi module.\n");
+   return 1;
+  }
+
+  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 1);  // Turn on LED.
+  cyw43_arch_enable_ap_mode(APSSID, APPSK, CYW43_AUTH_WPA2_AES_PSK);
+  cyw43_wifi_pm(&cyw43_state, cyw43_pm_value(CYW43_NO_POWERSAVE_MODE, 20, 1, 1, 1));
 
 // Setup DHCP server.
 
- IP4_ADDR(&gw, 192, 168, 4, 1);
- IP4_ADDR(&mask, 255, 255, 255, 0);
- dhcp_server_init(&dhcp_server, &gw, &mask);  // Start the DHCP server.
+  IP4_ADDR(&gw, 192, 168, 4, 1);
+  IP4_ADDR(&mask, 255, 255, 255, 0);
+  dhcp_server_init(&dhcp_server, &gw, &mask);  // Start the DHCP server.
 
-// Check IP address of access point.
+// Check IP address of access point.  ??
 
- uint32_t ip_addr = cyw43_state.netif[CYW43_ITF_AP].ip_addr.addr;
+//  uint32_t ip_addr = cyw43_state.netif[CYW43_ITF_AP].ip_addr.addr;  // ??
+//  log.print_message("IP Address: %lu.%lu.%lu.%lu\n", ip_addr & 0xFF, (ip_addr >> 8) & 0xFF, (ip_addr >> 16) & 0xFF, ip_addr >> 24);  // ??
 
- printf("IP Address: %lu.%lu.%lu.%lu\n", ip_addr & 0xFF, (ip_addr >> 8) & 0xFF, (ip_addr >> 16) & 0xFF, ip_addr >> 24);
+  run_server(sh, log);
 
- run_server();
+  log->print_message("\nEntering Display Mode.\n");  // *** Debug ***
+ }
+ else
+ {
 
- printf("\nEntering Display Mode.\n");  // *** Debug ***
+// *** Start of Test Section ***
+
+  string log_text;
+
+  string store_ssid       = sh->get_wifi_ssid();
+  string store_password   = sh->get_wifi_password();
+  string store_server_url = sh->get_image_server_url();
+
+  log_text = "\n SSID:       " + store_ssid + "\n Password:   " + store_password + "s\n Server URL: " + store_server_url + "\n";
+
+//  log.print_message("\n SSID:       %s\n Password:   %s\n Server URL: %s\n",  // ??
+//        store_ssid.c_str(), store_password.c_str(), store_server_url.c_str());  // *** Debug *** ??
+
+  log->print_message(log_text);
+  log->print_message("\nWiFi credentials already set, leaving...\n");
+
+// *** End of Test Section ***
+
+ }
 }

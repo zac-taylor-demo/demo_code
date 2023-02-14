@@ -29,6 +29,8 @@ add_executable(credentials_webserver
         src/main.cpp
         src/dhcpserver.c
         src/credentials_webserver.cpp
+        src/storage_handler.cpp
+        src/log.cpp
         )        
 
 target_include_directories(credentials_webserver PRIVATE        
