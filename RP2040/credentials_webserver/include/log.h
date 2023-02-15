@@ -32,11 +32,23 @@
 
 // Error Codes.
 
-#define NO_ERROR 0
+#define NO_ERROR             0
+#define TCP_PCB_MEMORY_ERR   1
+#define TCP_BIND_ERR         2
+#define TCP_START_LISTEN_ERR 3
+#define TCP_BUFFER_ERR       4
+#define TCP_WRITE_ERR        5
+#define WIFI_INIT_ERR        6
 
 // Error Messages.
 
-#define UNDEFINED_ERROR_MSG "Undefined error."
+#define UNDEFINED_ERROR_MSG      "Undefined error."
+#define TCP_PCB_MEMORY_ERR_MSG   "Error creating PCB. Out of Memory."
+#define TCP_BIND_ERR_MSG         "Unable to bind to port 80."
+#define TCP_START_LISTEN_ERR_MSG "Out of memory while starting tcp_listen."
+#define TCP_BUFFER_ERR_MSG       "Cannot send data, TCP send buffer too small."
+#define TCP_WRITE_ERR_MSG        "Cannot send data, TCP write."
+#define WIFI_INIT_ERR_MSG        "Failed to initialise WiFi module."
 
 // Log Codes.
 
@@ -45,7 +57,11 @@
 #define WIFI_CREDENTIALS_SET           3
 #define WIFI_CREDENTIALS_UPDATED       4
 
-#define UNDEFINED_LOG_MSG "Undefined message code."
+#define UNDEFINED_LOG_MSG                  "Undefined message code."
+#define CONFIG_JUMPER_DETECTED_MSG         "Configuration jumper detected."
+#define FLASH_STORAGE_AREA_INITIALISED_MSG "Flash storage area initialised."
+#define WIFI_CREDENTIALS_SET_MSG           "WiFi credentials set."
+#define WIFI_CREDENTIALS_UPDATED_MSG       "WiFi credentials updated."
 
 #include <iostream> 
 #include <fstream>
@@ -57,6 +73,10 @@ class Log
 {
  public:
   Log(bool is_verbose);
+  ~Log();
+
+  string get_error_text(int error_number);
+  string get_log_text(int log_number);
    
   void print_error(int error_number);
   void print_log(int log_number);

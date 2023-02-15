@@ -34,7 +34,61 @@
 #include "log.h"
 
 Log::Log(bool is_verbose):
- is_verbose(is_verbose) {}
+ is_verbose(is_verbose) { }
+
+Log::~Log()
+{ }
+
+/*!
+* \brief Gets error text using error number.
+*
+* \param error_number
+* \return string
+*/
+
+string Log::get_error_text(int error_number)
+{
+ string error_text = "";
+
+ switch (error_number)
+ {
+  case NO_ERROR: break;
+  case TCP_PCB_MEMORY_ERR: error_text = TCP_PCB_MEMORY_ERR_MSG; break;
+  case TCP_BIND_ERR: error_text = TCP_BIND_ERR_MSG; break;
+  case TCP_START_LISTEN_ERR: error_text = TCP_START_LISTEN_ERR_MSG; break;
+  case TCP_BUFFER_ERR: error_text = TCP_BUFFER_ERR_MSG; break;
+  case TCP_WRITE_ERR: error_text = TCP_WRITE_ERR_MSG; break;
+  case WIFI_INIT_ERR: error_text = WIFI_INIT_ERR_MSG; break;
+  
+  default: error_text = UNDEFINED_ERROR_MSG;
+ }
+
+ return error_text;
+}
+
+/*!
+* \brief Gets log text using log number.
+*
+* \param log_number
+* \return string
+*/
+
+string Log::get_log_text(int log_number)
+{
+ string log_text = "";
+
+ switch (log_number)
+ {
+  case CONFIG_JUMPER_DETECTED: log_text = CONFIG_JUMPER_DETECTED_MSG; break;
+  case FLASH_STORAGE_AREA_INITIALISED: log_text = FLASH_STORAGE_AREA_INITIALISED_MSG; break;
+  case WIFI_CREDENTIALS_SET: log_text = WIFI_CREDENTIALS_SET_MSG; break;
+  case WIFI_CREDENTIALS_UPDATED: log_text = WIFI_CREDENTIALS_UPDATED_MSG; break;
+
+  default: log_text = UNDEFINED_LOG_MSG;
+ }
+
+ return log_text;
+}
 
 /*!
 * \brief Prints error message.
@@ -53,6 +107,12 @@ void Log::print_error(int error_number)
   switch (error_number)
   {
    case NO_ERROR: break;
+   case TCP_PCB_MEMORY_ERR: print_message(TCP_PCB_MEMORY_ERR_MSG); break;
+   case TCP_BIND_ERR: print_message(TCP_BIND_ERR_MSG); break;
+   case TCP_START_LISTEN_ERR: print_message(TCP_START_LISTEN_ERR_MSG); break;
+   case TCP_BUFFER_ERR: print_message(TCP_BUFFER_ERR_MSG); break;
+   case TCP_WRITE_ERR: print_message(TCP_WRITE_ERR_MSG); break;
+   case WIFI_INIT_ERR: print_message(WIFI_INIT_ERR_MSG); break;
   
    default: print_message(UNDEFINED_ERROR_MSG);
   }
@@ -75,7 +135,11 @@ void Log::print_log(int log_number)
   
   switch (log_number)
   {
-  
+   case CONFIG_JUMPER_DETECTED: print_message(CONFIG_JUMPER_DETECTED_MSG); break;
+   case FLASH_STORAGE_AREA_INITIALISED: print_message(FLASH_STORAGE_AREA_INITIALISED_MSG); break;
+   case WIFI_CREDENTIALS_SET: print_message(WIFI_CREDENTIALS_SET_MSG); break;
+   case WIFI_CREDENTIALS_UPDATED: print_message(WIFI_CREDENTIALS_UPDATED_MSG); break;
+
    default: print_message(UNDEFINED_LOG_MSG);
   }
  }

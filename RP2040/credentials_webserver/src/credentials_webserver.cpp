@@ -45,7 +45,7 @@
  * Author: busdev
  *
  * Created on 30 December 2022
- * Updated on 31 January 2023
+ * Updated on 14 February 2023
  */
 
 #include "credentials_webserver.h"
@@ -409,7 +409,7 @@ err_t Credentials_Webserver::send_data(struct tcp_pcb *pcb, const char *data_ptr
 
  if (tcp_sndbuf(pcb) < data_len) 
  {
-  log->print_message("Cannot send data, TCP send buffer too small\r\n");
+  log->print_error(TCP_BUFFER_ERR);
   err = ERR_MEM;
  }
 
@@ -419,7 +419,7 @@ err_t Credentials_Webserver::send_data(struct tcp_pcb *pcb, const char *data_ptr
 
   if (err != ERR_OK) 
   {
-   log->print_message("Error writing test HTTP header\r\n");
+   log->print_error(TCP_WRITE_ERR);
   }
  }
 
@@ -1173,7 +1173,7 @@ void Credentials_Webserver::start_webserver()
 
  if (!pcb) 
  {
-  log->print_message("Error creating PCB. Out of Memory\r\n");
+  log->print_error(TCP_PCB_MEMORY_ERR);
   return;
  }
 
@@ -1181,7 +1181,7 @@ void Credentials_Webserver::start_webserver()
 
  if (err != ERR_OK) 
  {
-  log->print_message("Unable to bind to port 80\r\n");
+  log->print_error(TCP_BIND_ERR);
   return;
  }
 
@@ -1190,7 +1190,7 @@ void Credentials_Webserver::start_webserver()
 
  if (!pcb) 
  {
-  log->print_message("Out of memory while tcp_listen\r\n");
+  log->print_error(TCP_START_LISTEN_ERR);
   return;
  }
 

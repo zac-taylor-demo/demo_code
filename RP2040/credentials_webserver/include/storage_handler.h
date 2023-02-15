@@ -55,7 +55,9 @@
 #define WIFI_SSID_LENGTH     33
 #define WIFI_PASSWORD_LENGTH 64
 #define IMAGE_SERVER_URL_LENGTH 2049
-#define STORAGE_PADDING 157          // Padding to make structure size multiple of page size.
+#define ERROR_CODES_SIZE 10
+#define LOG_CODES_SIZE   10
+#define STORAGE_PADDING 135          // Padding to make structure size multiple of page size.
 #define STORAGE_SIZE 2304            // Divisible by page size (256).
 
 
@@ -76,6 +78,10 @@ struct store
  uint8_t wifi_ssid[WIFI_SSID_LENGTH];
  uint8_t wifi_password[WIFI_PASSWORD_LENGTH];
  uint8_t image_server_url[IMAGE_SERVER_URL_LENGTH];
+ uint8_t error_codes[ERROR_CODES_SIZE];
+ uint8_t error_codes_index;
+ uint8_t log_codes[LOG_CODES_SIZE];
+ uint8_t log_codes_index;
  uint8_t padding[STORAGE_PADDING];
 };
 

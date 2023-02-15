@@ -19,7 +19,7 @@
  * Author: Z Taylor
  *
  * Created on 30 December 2022
- * Updated on 12 January 2023
+ * Updated on 14 February 2023
  * 
  * Description
  * -----------
@@ -143,7 +143,6 @@ int main()
 
  log = new Log(true); // Verbose output.
  sh = new Storage_Handler();
- 
 
 // Check the EPD status byte and the level of GPIO15 (false = LOW).
 
@@ -151,7 +150,7 @@ int main()
  {
   if (cyw43_arch_init()) 
   {
-   log->print_message("Failed to initialise WiFi module.\n");
+   log->print_error(WIFI_INIT_ERR);
    return 1;
   }
 
@@ -181,10 +180,6 @@ int main()
   string store_server_url = sh->get_image_server_url();
 
   log_text = "\n SSID:       " + store_ssid + "\n Password:   " + store_password + "s\n Server URL: " + store_server_url + "\n";
-
-//  log.print_message("\n SSID:       %s\n Password:   %s\n Server URL: %s\n",  // ??
-//        store_ssid.c_str(), store_password.c_str(), store_server_url.c_str());  // *** Debug *** ??
-
   log->print_message(log_text);
   log->print_message("\nWiFi credentials already set, leaving...\n");
 
